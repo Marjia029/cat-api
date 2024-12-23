@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/beego/beego/v2/server/web"
@@ -17,16 +18,18 @@ type VotingCatImage struct {
 
 var favorites []string
 
-// Get method to fetch a random cat image and return it as JSON
-func (c *VotingController) Get() {
-	apiKey := "live_GWXcPdnWze27MNMJSjinKshtfsnVsi4EdrXfKUNhOmXsLakl5N7MwJCShLvC5Rxo"
+// Channel for fetching random cat images
+var fetchImageChan = make(chan string)
+var favoriteActionChan = make(chan string)
+
+// Fetch a random cat image concurrently
+func fetchRandomCatImage(apiKey string) {
 	url := "https://api.thecatapi.com/v1/images/search"
 
-	// Fetch random cat image
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		c.Data["json"] = map[string]interface{}{"error": "Failed to fetch cat image: " + err.Error()}
-		c.ServeJSON()
+		fetchImageChan <- ""
+		fmt.Println("Failed to create request:", err)
 		return
 	}
 	req.Header.Set("x-api-key", apiKey)
@@ -34,27 +37,42 @@ func (c *VotingController) Get() {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		c.Data["json"] = map[string]interface{}{"error": "Failed to fetch cat image: " + err.Error()}
-		c.ServeJSON()
+		fetchImageChan <- ""
+		fmt.Println("Failed to fetch cat image:", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	var images []VotingCatImage
 	if err := json.NewDecoder(resp.Body).Decode(&images); err != nil {
-		c.Data["json"] = map[string]interface{}{"error": "Failed to decode cat image response: " + err.Error()}
-		c.ServeJSON()
+		fetchImageChan <- ""
+		fmt.Println("Failed to decode cat image response:", err)
 		return
 	}
 
-	// Send the first image in the response
 	if len(images) > 0 {
+		fetchImageChan <- images[0].URL
+	} else {
+		fetchImageChan <- ""
+	}
+}
+
+// Get method to fetch a random cat image and return it as JSON
+func (c *VotingController) Get() {
+	apiKey := "live_GWXcPdnWze27MNMJSjinKshtfsnVsi4EdrXfKUNhOmXsLakl5N7MwJCShLvC5Rxo"
+
+	// Launch goroutine to fetch random cat image
+	go fetchRandomCatImage(apiKey)
+
+	imageURL := <-fetchImageChan // Wait for the result from the channel
+
+	if imageURL == "" {
+		c.Data["json"] = map[string]interface{}{"error": "Failed to fetch cat image"}
+	} else {
 		c.Data["json"] = map[string]interface{}{
-			"image_url": images[0].URL,
+			"image_url": imageURL,
 			"favorites": favorites,
 		}
-	} else {
-		c.Data["json"] = map[string]interface{}{"error": "No image found"}
 	}
 
 	c.ServeJSON()
@@ -67,13 +85,20 @@ func (c *VotingController) Post() {
 
 	// Handle favorite action
 	if action == "favorite" {
-		// Add the image to favorites
-		favorites = append(favorites, imageURL)
+		go func() {
+			favorites = append(favorites, imageURL)
+			favoriteActionChan <- "done"
+		}()
+	}
+
+	// Wait for favorite action to complete (if applicable)
+	if action == "favorite" {
+		<-favoriteActionChan
 	}
 
 	// Fetch a new random cat image if like/dislike action
 	if action == "like" || action == "dislike" || action == "favorite" {
-		c.Get() // This will fetch a new random image and update `c.Data["ImageURL"]`
+		c.Get() // Fetch a new image and update `c.Data["ImageURL"]`
 	}
 
 	// Send the updated image URL and favorites list as a JSON response
