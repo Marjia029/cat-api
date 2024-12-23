@@ -1,0 +1,42 @@
+/* Default styles for the favorites list */
+#favorites-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Grid view styles */
+  #favorites-list.grid-view {
+    display: grid; /* Change flex to grid for better control */
+    grid-template-columns: repeat(4, 1fr); /* Creates 4 equal-width columns */
+    gap: 10px; /* Adjust gap between items */
+  }
+  
+  #favorites-list.grid-view li {
+    width: 100%; /* Each item takes full width of its grid column */
+  }
+  
+  #favorites-list.grid-view img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  /* Column view styles */
+  #favorites-list.column-view {
+    display: block;
+  }
+  
+  #favorites-list.column-view li {
+    width: 100%; /* Full width for each item */
+    margin-bottom: 10px;
+  }
+  
+  #favorites-list.column-view img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  
+  

@@ -1,0 +1,11 @@
+# Normalize line endings to LF
+* text=auto
+
+# Ensure specific file types have LF endings
+*.go text eol=lf
+*.tpl text eol=lf
+*.js text eol=lf
+
+# Windows-specific line endings for certain files
+*.bat text eol=crlf
+*.cmd text eol=crlf
