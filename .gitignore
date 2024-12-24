@@ -6,6 +6,8 @@
 *.dylib
 *.test
 
+cat-api
+
 # Ignore the executable with the project name
 your-project-name.exe
 

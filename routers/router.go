@@ -16,6 +16,6 @@ func init() {
 	beego.Router("/breed-search", &controllers.BreedSearchController{})
 
 	beego.Router("/voting", &controllers.VotingController{})
-
+	beego.Router("/favourites", &controllers.FavoritesController{})
 
 }

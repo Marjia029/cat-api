@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/beego/beego/v2/core/config"
 	"github.com/beego/beego/v2/server/web"
 )
 
@@ -23,11 +24,21 @@ type CatBreed struct {
 
 type BreedSearchController struct {
 	web.Controller
+	APIKey string
+}
+
+// Initialize the controller with the API key
+func (c *BreedSearchController) Prepare() {
+	apiKey, err := config.String("api_key")
+	if err != nil {
+		c.CustomAbort(500, "Failed to load API key from configuration")
+		return
+	}
+	c.APIKey = apiKey // Store the API key in the controller's field
 }
 
 // Fetch all breeds
 func (c *BreedSearchController) Get() {
-	apiKey := "live_GWXcPdnWze27MNMJSjinKshtfsnVsi4EdrXfKUNhOmXsLakl5N7MwJCShLvC5Rxo"
 	url := "https://api.thecatapi.com/v1/breeds"
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -35,7 +46,7 @@ func (c *BreedSearchController) Get() {
 		c.CustomAbort(500, "Failed to create API request")
 		return
 	}
-	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("x-api-key", c.APIKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -69,8 +80,6 @@ func (c *BreedSearchController) Post() {
 		return
 	}
 
-	apiKey := "live_GWXcPdnWze27MNMJSjinKshtfsnVsi4EdrXfKUNhOmXsLakl5N7MwJCShLvC5Rxo"
-
 	// Channels for concurrent API calls
 	breedDetailsChan := make(chan CatBreed)
 	imagesChan := make(chan []BreedImage)
@@ -80,7 +89,7 @@ func (c *BreedSearchController) Post() {
 	go func() {
 		url := "https://api.thecatapi.com/v1/breeds"
 		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Set("x-api-key", apiKey)
+		req.Header.Set("x-api-key", c.APIKey)
 
 		client := &http.Client{}
 		resp, _ := client.Do(req)
@@ -103,7 +112,7 @@ func (c *BreedSearchController) Post() {
 	go func() {
 		url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?breed_ids=%s&limit=8", breedID)
 		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Set("x-api-key", apiKey)
+		req.Header.Set("x-api-key", c.APIKey)
 
 		client := &http.Client{}
 		resp, _ := client.Do(req)

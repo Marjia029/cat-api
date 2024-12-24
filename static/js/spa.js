@@ -2,6 +2,7 @@
 let currentPage = 'voting';
 let swiper = null;
 let currentImageUrl = '';
+let currentImageId = ""; 
 let favorites = [];
 let currentBreedId = null;
 
@@ -17,13 +18,6 @@ const API_KEY = 'live_GWXcPdnWze27MNMJSjinKshtfsnVsi4EdrXfKUNhOmXsLakl5N7MwJCShL
 document.addEventListener('DOMContentLoaded', function() {
     setupNavigation();
     setupBreedSelect();
-
-    // Load favorites from localStorage
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-        favorites = JSON.parse(savedFavorites);
-    }
-
     loadInitialPage();
 });
 
@@ -90,31 +84,48 @@ async function loadRandomCat() {
         // Fetch random cat image from VotingController (GET method)
         const response = await fetch('/voting', { method: 'GET' });
         const data = await response.json();
+
+        if (data.error) {
+            console.error('Error loading random cat:', data.error);
+            return;
+        }
+
+        // Update global variables with the new image data
         currentImageUrl = data.image_url;
-        document.getElementById('voting-image').src = data.image_url;
+        currentImageId = data.image_id;
+
+        // Update the DOM with the new cat image
+        document.getElementById('voting-image').src = currentImageUrl;
     } catch (error) {
         console.error('Error loading random cat:', error);
     }
 }
 
 
+
 async function handleVote(action) {
     try {
+        // Send vote action (like/dislike) with image_id to the backend
         const response = await fetch('/voting', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `action=${action}&image_url=${currentImageUrl}`
+            body: `action=${action}&image_url=${currentImageUrl}&image_id=${currentImageId}`
         });
+
         const data = await response.json();
+
+        // Handle response data (update image)
         currentImageUrl = data.image_url;
+        currentImageId = data.image_id; // Update image ID as well
         document.getElementById('voting-image').src = data.image_url;
-        favorites = data.favorites;
+
     } catch (error) {
         console.error('Error handling vote:', error);
     }
 }
+
 
 async function handleFavorite() {
     try {
@@ -123,16 +134,13 @@ async function handleFavorite() {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `action=favorite&image_url=${currentImageUrl}`
+            body: `action=favorite&image_url=${currentImageUrl}&image_id=${currentImageId}`
         });
         const data = await response.json();
-        
+
         currentImageUrl = data.image_url;
+        currentImageId = data.image_id; // Update the image ID for the next interaction
         document.getElementById('voting-image').src = data.image_url;
-        
-        // Update favorites array and save to localStorage
-        favorites = data.favorites;
-        localStorage.setItem('favorites', JSON.stringify(favorites));
 
         if (currentPage === 'favorites') {
             displayFavorites();
@@ -141,6 +149,7 @@ async function handleFavorite() {
         console.error('Error handling favorite:', error);
     }
 }
+
 
 
 // Update setupBreedSelect function
@@ -240,15 +249,33 @@ async function loadBreedDetails(breedId) {
 }
 
 // Favorites page functions
-function displayFavorites() {
+// Update displayFavorites to fetch from API
+async function displayFavorites() {
     const favoritesList = document.getElementById('favorites-list');
-    const reversedFavorites = [...favorites].reverse();
-    if (favorites.length > 0) {
-        favoritesList.innerHTML = reversedFavorites.map(url => 
-            `<li><img src="${url}" alt="Favorite Cat Image" width="200"></li>`
-        ).join('');
-    } else {
-        favoritesList.innerHTML = '<p>You have no favorite cat images yet.</p>';
+    try {
+        // Fetch favorites from the API
+        const response = await fetch('/favourites');
+        const favorites = await response.json();
+
+        if (favorites.length > 0) {
+            // Sort by created_at in reverse chronological order
+            const sortedFavorites = favorites.sort((a, b) => 
+                new Date(b.created_at) - new Date(a.created_at)
+            );
+
+            favoritesList.innerHTML = sortedFavorites.map(favorite => 
+                `<li>
+                    <img src="${favorite.image.url}" 
+                         alt="Favorite Cat Image" 
+                         width="200">
+                </li>`
+            ).join('');
+        } else {
+            favoritesList.innerHTML = '<p>You have no favorite cat images yet.</p>';
+        }
+    } catch (error) {
+        console.error('Error fetching favorites:', error);
+        favoritesList.innerHTML = '<p>Error loading favorite images. Please try again later.</p>';
     }
 }
 
