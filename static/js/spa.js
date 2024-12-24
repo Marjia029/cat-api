@@ -3,16 +3,7 @@ let currentPage = 'voting';
 let swiper = null;
 let currentImageUrl = '';
 let currentImageId = ""; 
-let favorites = [];
 let currentBreedId = null;
-
-// API endpoints
-const API_KEY = 'live_GWXcPdnWze27MNMJSjinKshtfsnVsi4EdrXfKUNhOmXsLakl5N7MwJCShLvC5Rxo';
-// const API_ENDPOINTS = {
-//     randomCat: 'https://api.thecatapi.com/v1/images/search',
-//     breeds: 'https://api.thecatapi.com/v1/breeds',
-//     breedImages: (breedId) => `https://api.thecatapi.com/v1/images/search?breed_ids=${breedId}&limit=8`
-// };
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
