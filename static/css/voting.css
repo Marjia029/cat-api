@@ -53,21 +53,7 @@
     width: 50px;
     height: 50px;
 }
+#favorites-controls{
+    padding: 10px 0;
 
-.favorites-container {
-    margin-top: 30px;
-}
-
-.favorites-container ul {
-    list-style: none;
-    padding: 0;
-}
-
-.favorites-container li {
-    display: inline-block;
-    margin: 10px;
-}
-
-.favorites-container img {
-    border-radius: 5px;
 }

@@ -9,11 +9,13 @@
   #favorites-list.grid-view {
     display: grid; /* Change flex to grid for better control */
     grid-template-columns: repeat(4, 1fr); /* Creates 4 equal-width columns */
-    gap: 10px; /* Adjust gap between items */
+    column-gap: 5px; /* Adjust gap between items */
+    row-gap: 1px;
   }
   
   #favorites-list.grid-view li {
     width: 100%; /* Each item takes full width of its grid column */
+    padding: 0;
   }
   
   #favorites-list.grid-view img {
