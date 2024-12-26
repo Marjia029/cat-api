@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/beego/beego/v2/core/config"
 	"github.com/beego/beego/v2/server/web"
 )
 
@@ -25,13 +24,14 @@ type FavoriteResponse struct {
 }
 
 func (c *FavoritesController) Prepare() {
-	apiKey, err := config.String("api_key")
-	if err != nil {
-		c.Data["json"] = map[string]interface{}{"error": "Failed to load API key from configuration"}
-		c.ServeJSON()
-		return
+	// Use APIKey if provided; fallback to Beego config
+	if c.APIKey == "" {
+		apiKey, err := web.AppConfig.String("api_key")
+		if err != nil || apiKey == "" {
+			c.CustomAbort(http.StatusInternalServerError, "API key is not configured")
+		}
+		c.APIKey = apiKey
 	}
-	c.APIKey = apiKey // Store the API key in the controller's field
 }
 
 // Get retrieves all favorites
