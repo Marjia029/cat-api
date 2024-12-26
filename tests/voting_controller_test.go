@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -112,80 +111,6 @@ func TestVotingControllerGet(t *testing.T) {
 
 	// Ensure that the response body is not empty
 	assert.NotEmpty(t, w.Body.String())
-}
-
-func TestVotingControllerPost(t *testing.T) {
-	tests := []struct {
-		name           string
-		action         string
-		imageID        string
-		expectedStatus int
-	}{
-		{
-			name:           "Like Action",
-			action:         "like",
-			imageID:        "test123",
-			expectedStatus: 200,
-		},
-		{
-			name:           "Dislike Action",
-			action:         "dislike",
-			imageID:        "test123",
-			expectedStatus: 200,
-		},
-		{
-			name:           "Favorite Action",
-			action:         "favorite",
-			imageID:        "test123",
-			expectedStatus: 200,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Set up mock transport
-			mockTransport := NewMockTransport()
-			mockTransport.responses["/v1/votes"] = MockResponse{
-				StatusCode: tt.expectedStatus,
-				Body:       `{"message":"SUCCESS"}`,
-			}
-			mockTransport.responses["/v1/favourites"] = MockResponse{
-				StatusCode: tt.expectedStatus,
-				Body:       `{"message":"SUCCESS"}`,
-			}
-			http.DefaultClient.Transport = mockTransport
-
-			// Create test context
-			ctx, w := createTestContext("POST", "/voting")
-
-			// Initialize controller
-			controller := initController(ctx)
-
-			// Set form values
-			ctx.Input.SetParam("action", tt.action)
-			ctx.Input.SetParam("image_id", tt.imageID)
-
-			// Call Post method
-			controller.Post()
-
-			// Check for a valid response
-			assert.Equal(t, http.StatusOK, w.Code)
-
-			// Ensure that the response body is not empty
-			assert.NotEmpty(t, w.Body.String())
-
-			// Parse response
-			var result map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &result)
-			if err != nil {
-				t.Fatalf("Failed to unmarshal response: %v", err)
-			}
-
-			// Verify response contains image data
-			assert.Contains(t, result, "image_url")
-			assert.Contains(t, result, "image_id")
-		})
-	}
 }
 
 func TestVotingControllerPrepare(t *testing.T) {

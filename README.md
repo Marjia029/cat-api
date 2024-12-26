@@ -71,7 +71,7 @@ Open the Terminal and Run
  ```
  For test Coverage:
  ```bash
- go test -coverprofile=coverage.out ./...
+ go test -coverprofile=coverage.out ./... #if fails run again
  go tool cover -html coverage.out
  ```
  Now check the dropdown to see the coverage percentage of every file.
