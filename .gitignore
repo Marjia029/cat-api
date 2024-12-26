@@ -26,7 +26,7 @@ your-project-name.exe
 .env
 
 # Beego-specific files
-/conf/app.conf
+/tests/conf/app.conf
 
 # API keys or sensitive configuration files
 *.key

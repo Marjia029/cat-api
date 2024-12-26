@@ -29,12 +29,18 @@ type BreedSearchController struct {
 
 // Initialize the controller with the API key
 func (c *BreedSearchController) Prepare() {
+	// If API key is already set (e.g., in tests), use that
+	if c.APIKey != "" {
+		return
+	}
+
+	// Otherwise try to get it from config
 	apiKey, err := config.String("api_key")
 	if err != nil {
 		c.CustomAbort(500, "Failed to load API key from configuration")
 		return
 	}
-	c.APIKey = apiKey // Store the API key in the controller's field
+	c.APIKey = apiKey
 }
 
 // Fetch all breeds
